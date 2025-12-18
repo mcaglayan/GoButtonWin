@@ -1,0 +1,432 @@
+.gb-runLayout {
+  height: calc(100vh - 44px);
+  display: grid;
+  grid-template-columns: 90px 1fr 420px;
+  gap: 0;
+}
+
+.gb-master {
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 10px 10px;
+}
+
+.gb-dimBtn {
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 6px;
+  padding: 10px 0;
+  text-align: center;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.gb-fader {
+  margin-top: 12px;
+  position: relative;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.18);
+  touch-action: none;
+  user-select: none;
+}
+
+.gb-fader__track {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  bottom: 12px;
+  width: 10px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+.gb-fader__thumb {
+  position: absolute;
+  left: 50%;
+  top: 80px;
+  width: 28px;
+  height: 16px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+}
+
+.gb-masterVolumeLabel {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 10px;
+}
+
+.gb-pill {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.gb-stage {
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.gb-currentCue {
+  padding: 22px 24px;
+}
+
+.gb-currentCue__number {
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0.55;
+}
+
+.gb-currentCue__title {
+  margin-top: 10px;
+  font-size: 34px;
+  font-weight: 800;
+  max-width: 880px;
+}
+
+.gb-currentCue__title--clickable {
+  cursor: pointer;
+}
+
+.gb-currentCue__title--clickable:hover {
+  text-decoration: underline;
+  text-decoration-color: rgba(140, 210, 255, 0.65);
+}
+
+.gb-currentCue__fades {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gb-muted {
+  opacity: 0.25;
+  font-size: 12px;
+  text-align: center;
+}
+
+.gb-bottom {
+  background: rgba(0, 0, 0, 0.28);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 14px;
+}
+
+.gb-soundboardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+}
+
+.gb-soundboardTitle {
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.gb-soundboardActions {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.gb-padPanel {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(0, 0, 0, 0.20);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.gb-pads {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding-bottom: 10px;
+}
+
+.gb-pad {
+  width: 130px;
+  height: 150px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  text-align: left;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.gb-padTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gb-padActions {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.gb-padIconBtn {
+  height: 24px;
+  width: 24px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.92);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.gb-padIconBtn--danger {
+  background: rgba(231, 76, 92, 0.22);
+  border-color: rgba(231, 76, 92, 0.35);
+}
+
+.gb-pad--red {
+  background: rgba(231, 76, 92, 0.85);
+}
+
+.gb-pad--add {
+  background: rgba(0, 0, 0, 0.15);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 36px;
+  display: grid;
+  place-items: center;
+}
+
+.gb-pad__num {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.gb-pad__label {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.gb-pad__meta {
+  margin-top: auto;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.gb-transport {
+  display: grid;
+  grid-template-columns: 1fr 520px;
+  align-items: center;
+  gap: 14px;
+}
+
+.gb-clock {
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  opacity: 0.95;
+}
+
+.gb-clockSub {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.55;
+}
+
+.gb-transportBtns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.gb-btn {
+  height: 64px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.gb-btn--ghost {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.gb-btn--go {
+  background: var(--go-green);
+  color: #fff;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+.gb-cues {
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.gb-cuePanel {
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.20);
+}
+
+.gb-cuePanel__title {
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.gb-cuePanel__subtitle {
+  opacity: 0.7;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+.gb-cuePanel__actions {
+  display: inline-flex;
+  gap: 8px;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.gb-cueList {
+  overflow: auto;
+}
+
+.gb-cueRow {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.22);
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.gb-cueRow--selected {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.gb-cueRow--playing {
+  outline: 1px solid rgba(140, 210, 255, 0.22);
+}
+
+.gb-cueBadge {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.gb-cueBadge--amber {
+  background: #f0b429;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.gb-cueBadge--red {
+  background: #d6454f;
+}
+
+.gb-cueText {
+  display: grid;
+  gap: 6px;
+}
+
+.gb-cueTitle {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.gb-cueMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.gb-cueDot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.gb-cueProgress {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  position: relative;
+}
+
+.gb-cueProgress__thumb {
+  position: absolute;
+  left: 18%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.gb-cueGrip {
+  opacity: 0.35;
+  align-self: start;
+}
+
+.gb-cueActions {
+  display: inline-flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.gb-backLink {
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.gb-runTopRight {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.gb-iconBtn {
+  height: 28px;
+  width: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.gb-iconBtn:disabled {
+  opacity: 0.35;
+}

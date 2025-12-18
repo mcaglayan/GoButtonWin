@@ -1,0 +1,23 @@
+.gb-topbar {
+  height: 44px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  color: var(--text-1);
+}
+
+.gb-topbar__title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  opacity: 0.95;
+}
+
+.gb-topbar__right {
+  justify-self: end;
+  padding-right: 12px;
+}
+
+.gb-topbar__spacer {
+  padding-left: 12px;
+}

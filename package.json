@@ -1,0 +1,49 @@
+{
+  "name": "go-button-windows",
+  "private": true,
+  "version": "0.1.0",
+  "main": "electron.cjs",
+  "scripts": {
+    "dev": "concurrently -k -n ELECTRONTS,VITE,ELECTRON -c yellow,cyan,magenta \"tsc -p tsconfig.electron.json --watch --preserveWatchOutput\" \"vite\" \"wait-on dist-electron/main/main.js dist-electron/main/preload.js http://127.0.0.1:5174 && electron .\"",
+    "build": "tsc -p tsconfig.electron.json && vite build",
+    "preview": "vite preview",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder"
+  },
+  "build": {
+    "appId": "com.go-button-windows.app",
+    "productName": "Go Button Windows",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist-electron/**",
+      "dist-renderer/**",
+      "electron.cjs",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.27.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
+    "electron": "^33.3.1",
+    "electron-builder": "^26.0.12",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5",
+    "wait-on": "^8.0.1"
+  }
+}

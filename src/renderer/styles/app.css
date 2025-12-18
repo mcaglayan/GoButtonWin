@@ -1,0 +1,80 @@
+:root {
+  --bg: #0b2a33;
+  --surface-1: #f2f4f6;
+  --border-1: rgba(0, 0, 0, 0.10);
+  --text-1: rgba(255, 255, 255, 0.92);
+  --go-green: #1aa34a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text-1);
+}
+
+#root {
+  height: 100%;
+}
+
+button {
+  font-family: inherit;
+}
+
+.gb-app {
+  height: 100vh;
+  background: var(--bg);
+}
+
+.gb-link {
+  background: transparent;
+  border: 0;
+  color: rgba(140, 210, 255, 0.9);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.gb-miniBtn {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.65);
+  color: rgba(0, 0, 0, 0.8);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gb-miniBtn--danger {
+  background: rgba(231, 76, 92, 0.18);
+  border-color: rgba(231, 76, 92, 0.35);
+}
+
+.gb-input {
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.92);
+  padding: 0 10px;
+  outline: none;
+}
+
+.gb-input:focus {
+  border-color: rgba(140, 210, 255, 0.55);
+}
+
+.gb-inputRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
