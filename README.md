@@ -2,6 +2,13 @@
 
 This repo is an Electron + React UI scaffold for a theatre sound cue / soundboard app.
 
+## Screenshots
+![Show runner](screenshots/1.png)
+
+![Cue edit](screenshots/2.png)
+
+![Shows list](screenshots/3.png)
+
 ## How to run (Windows)
 - Install dependencies: `npm install`
 - Start the app (dev): `npm run dev`
