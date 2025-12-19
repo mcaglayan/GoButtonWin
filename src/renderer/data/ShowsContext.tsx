@@ -2,6 +2,7 @@ import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useSt
 import { seededShows, type Show } from './seed';
 import { loadDataFromDisk, loadShowsFromDisk, saveShowsToDisk } from './storage';
 import { audioEngine } from '../audio/audioEngine';
+import { pickWarmPreloadPaths } from './warmPreload';
 
 type ShowsState = {
   isLoaded: boolean;
@@ -21,39 +22,8 @@ export function ShowsProvider(props: { children: ReactNode }) {
     if (didWarmDecodeRef.current) return;
     didWarmDecodeRef.current = true;
 
-    const MAX_PRELOAD = 3;
-    const seen = new Set<string>();
-    const candidates: string[] = [];
-
-    const add = (raw: string | null | undefined) => {
-      const p = (raw ?? '').trim();
-      if (!p) return;
-      const key = p.toLowerCase();
-      if (seen.has(key)) return;
-      seen.add(key);
-      candidates.push(p);
-    };
-
-    // Gather candidates from cues first (most likely to be used with GO), then pads.
-    for (const show of nextShows) {
-      for (const cue of show.cues ?? []) add(cue.mediaPath);
-      for (const pad of show.pads ?? []) add(pad.mediaPath);
-      if (candidates.length >= 50) break; // safety cap; we only preload a few anyway
-    }
-
-    const isMp3 = (p: string) => p.toLowerCase().endsWith('.mp3');
-    const ordered = candidates
-      .slice(0, 50)
-      .sort((a, b) => {
-        const am = isMp3(a) ? 1 : 0;
-        const bm = isMp3(b) ? 1 : 0;
-        return bm - am;
-      })
-      .slice(0, MAX_PRELOAD);
-
+    const ordered = pickWarmPreloadPaths(nextShows, 3);
     if (ordered.length === 0) return;
-
-    // Kick off decoding asynchronously to avoid doing work during initial hydrate paint.
     setTimeout(() => audioEngine.preloadFiles(ordered), 0);
   }
 
