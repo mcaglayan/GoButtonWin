@@ -19,6 +19,16 @@ Notes:
 - Cues and hits can overlap (simultaneous playback).
 - MP3 and WAV are supported (via Chromium/WebAudio decode).
 
+## Laptop Remote Control (LAN)
+The app starts a small HTTP server on the Windows box so you can control GO/Stop from another device on the same network.
+
+- Make sure both devices are on the same LAN (Wi‑Fi/Ethernet).
+- Start the app on the Windows box.
+- On the laptop, open:
+  - `http://<windows-ip>:17832/`
+
+Windows may show a Firewall prompt the first time—allow it on your private network.
+
 ## Dev
 - Install: `npm install`
 - Run: `npm run dev`
