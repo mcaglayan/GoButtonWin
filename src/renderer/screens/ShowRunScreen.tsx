@@ -131,6 +131,39 @@ export default function ShowRunScreen() {
   }, [panel, selectedCueId, show?.id]);
 
   useEffect(() => {
+    const onRemoteCommand = window.app?.onRemoteCommand;
+    if (!onRemoteCommand) return;
+
+    const cues = show?.cues ?? [];
+
+    onRemoteCommand((cmd) => {
+      if (cmd === 'go') {
+        void go();
+        return;
+      }
+      if (cmd === 'stopAll') {
+        stopAll();
+        return;
+      }
+      if (cmd === 'stopCue') {
+        stopSelectedCue();
+        return;
+      }
+      if (cmd === 'pauseToggle') {
+        togglePause();
+        return;
+      }
+      if (cmd === 'selectUp' || cmd === 'selectDown') {
+        if (cues.length === 0) return;
+        const idx = selectedCueId ? cues.findIndex((c) => c.id === selectedCueId) : 0;
+        const cur = idx >= 0 ? idx : 0;
+        const next = cmd === 'selectUp' ? Math.max(0, cur - 1) : Math.min(cues.length - 1, cur + 1);
+        setSelectedCueId(cues[next]?.id);
+      }
+    });
+  }, [selectedCueId, show?.id]);
+
+  useEffect(() => {
     if (!show) return;
 
     const paths: string[] = [];

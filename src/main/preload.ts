@@ -21,6 +21,9 @@ contextBridge.exposeInMainWorld('app', {
   onMenuAction: (handler: (action: 'save' | 'reload' | 'reset') => void) => {
     ipcRenderer.on('menu:action', (_event, action) => handler(action));
   },
+  onRemoteCommand: (handler: (cmd: 'go' | 'stopAll' | 'stopCue' | 'pauseToggle' | 'selectUp' | 'selectDown') => void) => {
+    ipcRenderer.on('remote:command', (_event, cmd) => handler(cmd));
+  },
 });
 
 declare global {
@@ -42,6 +45,7 @@ declare global {
         toFileUrl: (filePath: string) => string;
       };
       onMenuAction?: (handler: (action: 'save' | 'reload' | 'reset') => void) => void;
+      onRemoteCommand?: (handler: (cmd: 'go' | 'stopAll' | 'stopCue' | 'pauseToggle' | 'selectUp' | 'selectDown') => void) => void;
     };
   }
 }

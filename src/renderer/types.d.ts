@@ -19,6 +19,7 @@ declare global {
         toFileUrl: (filePath: string) => string;
       };
       onMenuAction?: (handler: (action: 'save' | 'reload' | 'reset') => void) => void;
+      onRemoteCommand?: (handler: (cmd: 'go' | 'stopAll' | 'stopCue' | 'pauseToggle' | 'selectUp' | 'selectDown') => void) => void;
     };
   }
 }

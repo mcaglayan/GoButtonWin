@@ -2,9 +2,11 @@ import { app, BrowserWindow, Menu, dialog, ipcMain, screen, shell } from 'electr
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { loadPersistedShows, savePersistedShows, type PersistedData } from './storage';
+import { startRemoteServer, type RemoteCommand } from './remoteServer';
 
 const isDev = !app.isPackaged;
 let mainWindow: BrowserWindow | null = null;
+let remoteServer: { close: () => Promise<void> } | null = null;
 
 function sendMenuAction(action: 'save' | 'reload' | 'reset') {
   if (!mainWindow) return;
@@ -88,6 +90,11 @@ function createWindow() {
   } else {
     win.loadFile(path.join(__dirname, '../../dist-renderer/index.html'));
   }
+}
+
+function sendRemoteCommand(cmd: RemoteCommand) {
+  if (!mainWindow) return;
+  mainWindow.webContents.send('remote:command', cmd);
 }
 
 app.whenReady().then(() => {
@@ -190,6 +197,15 @@ app.whenReady().then(() => {
 
   createWindow();
 
+  // LAN remote control (browser on a laptop -> HTTP -> Electron -> renderer)
+  // Note: Windows Firewall may prompt the first time.
+  if (!remoteServer) {
+    remoteServer = startRemoteServer({
+      port: 17832,
+      onCommand: (cmd) => sendRemoteCommand(cmd),
+    });
+  }
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
@@ -197,4 +213,15 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('before-quit', async () => {
+  if (remoteServer) {
+    try {
+      await remoteServer.close();
+    } catch {
+      // ignore
+    }
+    remoteServer = null;
+  }
 });
