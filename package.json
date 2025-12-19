@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "concurrently -k -n ELECTRONTS,VITE,ELECTRON -c yellow,cyan,magenta \"tsc -p tsconfig.electron.json --watch --preserveWatchOutput\" \"vite\" \"wait-on dist-electron/main/main.js dist-electron/main/preload.js http://127.0.0.1:5174 && electron .\"",
     "build": "tsc -p tsconfig.electron.json && vite build",
+    "test": "vitest run",
     "preview": "vite preview",
     "pack": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder"
@@ -35,6 +36,9 @@
     "react-router-dom": "^6.27.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
@@ -42,8 +46,10 @@
     "concurrently": "^9.1.0",
     "electron": "^33.3.1",
     "electron-builder": "^26.0.12",
+    "jsdom": "^27.3.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.5",
+    "vitest": "^2.1.8",
     "wait-on": "^8.0.1"
   }
 }
