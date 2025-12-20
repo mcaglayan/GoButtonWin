@@ -41,6 +41,13 @@ function isTypingTarget(target: EventTarget | null) {
   return false;
 }
 
+function formatClockHHMMSS(d: Date) {
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
 export default function ShowRunScreen() {
   const { showId } = useParams();
   const navigate = useNavigate();
@@ -50,6 +57,8 @@ export default function ShowRunScreen() {
   const [isCueEditMode, setIsCueEditMode] = useState(false);
   const [isPadEditMode, setIsPadEditMode] = useState(false);
   const [masterVol01, setMasterVol01] = useState(1);
+  const [isDim, setIsDim] = useState(false);
+  const preDimMasterVol01Ref = useRef<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const faderRef = useRef<HTMLDivElement | null>(null);
   const [faderHeightPx, setFaderHeightPx] = useState(0);
@@ -58,7 +67,9 @@ export default function ShowRunScreen() {
   const playingCueHandlesRef = useRef(new Map<string, Set<{ stop: () => void; getProgress01: () => number }>>());
   const rafRef = useRef<number | null>(null);
   const [estimatedLatencyMs, setEstimatedLatencyMs] = useState<number | null>(null);
+  const [clockHHMMSS, setClockHHMMSS] = useState(() => formatClockHHMMSS(new Date()));
   const lastPlayedCueIdRef = useRef<string | null>(null);
+  const lastSelectedCueIdRef = useRef<string | undefined>(undefined);
   const [panel, setPanel] = useState<
     | { kind: 'addCue'; title: string }
     | { kind: 'renameCue'; cueId: string; title: string }
@@ -190,6 +201,31 @@ export default function ShowRunScreen() {
   }, [masterVol01]);
 
   useEffect(() => {
+    const tick = () => setClockHHMMSS(formatClockHHMMSS(new Date()));
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const prev = lastSelectedCueIdRef.current;
+    lastSelectedCueIdRef.current = selectedCueId;
+
+    // If the operator changes the selected cue while paused, do NOT let the previously
+    // paused audio resume later.
+    if (!isPaused) return;
+    if (!prev || !selectedCueId || prev === selectedCueId) return;
+
+    audioEngine.stopAll();
+    playingCueHandlesRef.current.clear();
+    setCueProgress({});
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    lastPlayedCueIdRef.current = null;
+    setIsPaused(false);
+  }, [selectedCueId, isPaused]);
+
+  useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
@@ -224,6 +260,82 @@ export default function ShowRunScreen() {
   }, [panel]);
 
   const selectedCue = show?.cues.find((c) => c.id === selectedCueId) ?? show?.cues[0];
+
+  function stopCueById(cueId: string) {
+    const set = playingCueHandlesRef.current.get(cueId);
+    if (!set || set.size === 0) return;
+    for (const h of Array.from(set)) h.stop();
+    playingCueHandlesRef.current.delete(cueId);
+    setCueProgress((prev) => {
+      const next = { ...prev };
+      delete next[cueId];
+      return next;
+    });
+  }
+
+  async function playSelectedCue(opts: { advanceSelection: boolean }) {
+    if (!selectedCue?.id) return;
+
+    const playedCueId = selectedCue.id;
+
+    const toneHz = selectedCue.toneHz;
+    const filePath = selectedCue.mediaPath;
+
+    const handle =
+      typeof toneHz === 'number' && Number.isFinite(toneHz) && toneHz > 0
+        ? await audioEngine.playTone({
+            hz: toneHz,
+            seconds: 1.0,
+            gainDb: selectedCue.gainDb ?? 0,
+            pan: selectedCue.pan ?? 0,
+          })
+        : filePath
+          ? await audioEngine.playFile({ filePath, gainDb: selectedCue.gainDb ?? 0, pan: selectedCue.pan ?? 0 })
+          : null;
+    if (!handle || !selectedCue?.id) return;
+
+    setEstimatedLatencyMs(audioEngine.getEstimatedOutputLatencyMs());
+
+    const existing = playingCueHandlesRef.current.get(playedCueId);
+    if (existing) existing.add(handle);
+    else playingCueHandlesRef.current.set(playedCueId, new Set([handle]));
+
+    lastPlayedCueIdRef.current = playedCueId;
+
+    if (!rafRef.current) {
+      const tick = () => {
+        const next: Record<string, number> = {};
+        for (const [cueId, set] of playingCueHandlesRef.current.entries()) {
+          let maxP = 0;
+          for (const h of Array.from(set)) {
+            const p = h.getProgress01();
+            if (p >= 1) {
+              h.stop();
+              set.delete(h);
+              continue;
+            }
+            maxP = Math.max(maxP, p);
+          }
+          if (set.size === 0) {
+            playingCueHandlesRef.current.delete(cueId);
+            continue;
+          }
+          next[cueId] = maxP;
+        }
+        setCueProgress(next);
+        rafRef.current = playingCueHandlesRef.current.size > 0 ? requestAnimationFrame(tick) : null;
+      };
+      rafRef.current = requestAnimationFrame(tick);
+    }
+
+    if (opts.advanceSelection) {
+      const cues = show?.cues ?? [];
+      const idx = cues.findIndex((c) => c.id === playedCueId);
+      if (idx >= 0 && idx + 1 < cues.length) {
+        setSelectedCueId(cues[idx + 1].id);
+      }
+    }
+  }
 
   const stopTargetCueId = useMemo(() => {
     const selectedId = selectedCueId;
@@ -393,59 +505,20 @@ export default function ShowRunScreen() {
   }
 
   async function go() {
+    await playSelectedCue({ advanceSelection: true });
+  }
+
+  async function restartSelectedCue() {
     if (!selectedCue?.id) return;
 
-    const playedCueId = selectedCue.id;
+    // Restart means: play from the beginning, and do not advance selection.
+    // We stop only the selected cue's active handles.
+    stopCueById(selectedCue.id);
 
-    const toneHz = selectedCue.toneHz;
-    const filePath = selectedCue.mediaPath;
+    // If the app was paused and the only paused item was this cue, clear pause UI state.
+    if (!audioEngine.isAnythingPaused()) setIsPaused(false);
 
-    const handle =
-      typeof toneHz === 'number' && Number.isFinite(toneHz) && toneHz > 0
-        ? await audioEngine.playTone({ hz: toneHz, seconds: 1.0, gainDb: selectedCue.gainDb ?? 0, pan: selectedCue.pan ?? 0 })
-        : filePath
-          ? await audioEngine.playFile({ filePath, gainDb: selectedCue.gainDb ?? 0, pan: selectedCue.pan ?? 0 })
-          : null;
-    if (!handle || !selectedCue?.id) return;
-
-    setEstimatedLatencyMs(audioEngine.getEstimatedOutputLatencyMs());
-
-    const existing = playingCueHandlesRef.current.get(playedCueId);
-    if (existing) existing.add(handle);
-    else playingCueHandlesRef.current.set(playedCueId, new Set([handle]));
-
-    lastPlayedCueIdRef.current = playedCueId;
-
-    if (!rafRef.current) {
-      const tick = () => {
-        const next: Record<string, number> = {};
-        for (const [cueId, set] of playingCueHandlesRef.current.entries()) {
-          let maxP = 0;
-          for (const h of Array.from(set)) {
-            const p = h.getProgress01();
-            if (p >= 1) {
-              set.delete(h);
-              continue;
-            }
-            maxP = Math.max(maxP, p);
-          }
-          if (set.size === 0) {
-            playingCueHandlesRef.current.delete(cueId);
-            continue;
-          }
-          next[cueId] = maxP;
-        }
-        setCueProgress(next);
-        rafRef.current = playingCueHandlesRef.current.size > 0 ? requestAnimationFrame(tick) : null;
-      };
-      rafRef.current = requestAnimationFrame(tick);
-    }
-
-    const cues = show?.cues ?? [];
-    const idx = cues.findIndex((c) => c.id === playedCueId);
-    if (idx >= 0 && idx + 1 < cues.length) {
-      setSelectedCueId(cues[idx + 1].id);
-    }
+    await playSelectedCue({ advanceSelection: false });
   }
 
   function stopAll() {
@@ -543,7 +616,30 @@ export default function ShowRunScreen() {
 
       <div className="gb-runLayout">
         <aside className="gb-master">
-          <div className="gb-dimBtn">DIM</div>
+          <button
+            type="button"
+            className={`gb-dimBtn ${isDim ? 'gb-dimBtn--active' : ''}`}
+            aria-pressed={isDim}
+            onClick={() => {
+              const DIM_VOLUME_01 = 0.25;
+              setIsDim((prev) => {
+                const next = !prev;
+                if (next) {
+                  preDimMasterVol01Ref.current = masterVol01;
+                  setMasterVol01(DIM_VOLUME_01);
+                } else {
+                  const restore = preDimMasterVol01Ref.current;
+                  preDimMasterVol01Ref.current = null;
+                  if (typeof restore === 'number' && Number.isFinite(restore)) {
+                    setMasterVol01(clamp(restore, 0, 1));
+                  }
+                }
+                return next;
+              });
+            }}
+          >
+            DIM
+          </button>
           <div
             ref={faderRef}
             className="gb-fader"
@@ -782,7 +878,7 @@ export default function ShowRunScreen() {
 
             <div className="gb-transport">
               <div>
-                <div className="gb-clock">13:46:59</div>
+                <div className="gb-clock">{clockHHMMSS}</div>
                 {estimatedLatencyMs != null && (
                   <div className="gb-clockSub">~{Math.round(estimatedLatencyMs)} ms output latency</div>
                 )}
@@ -923,6 +1019,22 @@ export default function ShowRunScreen() {
 
           <div className="gb-backLink">
             <Link to="/shows" className="gb-link">← Back</Link>
+            <div className="gb-backLink__controls">
+              <button className="gb-miniBtn" type="button" onClick={() => void restartSelectedCue()} disabled={!selectedCue?.id}>
+                ⏮ Restart
+              </button>
+              <button className="gb-miniBtn" type="button" onClick={togglePause}>
+                {isPaused ? '▶ Resume' : '⏸ Pause'}
+              </button>
+              <button
+                className="gb-miniBtn"
+                type="button"
+                onClick={() => void playSelectedCue({ advanceSelection: false })}
+                disabled={!selectedCue?.id}
+              >
+                ▶ Play {selectedCue?.number ?? ''}
+              </button>
+            </div>
           </div>
         </aside>
       </div>

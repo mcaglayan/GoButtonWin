@@ -33,11 +33,21 @@ button {
 }
 
 .gb-link {
-  background: transparent;
-  border: 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 6px;
+  padding: 4px 8px;
   color: rgba(140, 210, 255, 0.9);
   cursor: pointer;
   font-weight: 600;
+  text-decoration: none;
+}
+
+.gb-link:hover,
+.gb-link:focus-visible {
+  text-decoration: underline;
+  text-decoration-color: rgba(140, 210, 255, 0.85);
+  text-underline-offset: 2px;
 }
 
 .gb-miniBtn {

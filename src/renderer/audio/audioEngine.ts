@@ -95,9 +95,38 @@ class AudioEngine {
     let paused = false;
     let finished = false;
     let stopping = false;
+    let oscToken = 0;
+
+    const cleanup = () => {
+      // Idempotent cleanup.
+      stopping = true;
+
+      try {
+        osc?.stop();
+      } catch {
+        // ignore
+      }
+      try {
+        osc?.disconnect();
+      } catch {
+        // ignore
+      }
+      osc = null;
+
+      try {
+        gainNode.disconnect();
+        panner.disconnect();
+      } catch {
+        // ignore
+      }
+
+      this.active.delete(handle);
+    };
 
     const connectAndStart = () => {
       if (finished) return;
+      const myToken = ++oscToken;
+
       const o = ctx.createOscillator();
       o.type = 'sine';
       o.frequency.value = hz;
@@ -108,9 +137,13 @@ class AudioEngine {
       o.addEventListener(
         'ended',
         () => {
+          // Ignore late 'ended' from a previous oscillator (pause/resume edge case).
+          if (myToken !== oscToken) return;
           if (stopping) return;
           finished = true;
-          handle.stop();
+          paused = false;
+          offset = 0;
+          cleanup();
         },
         { once: true }
       );
@@ -126,34 +159,12 @@ class AudioEngine {
 
     const handle: PlayingHandle = {
       stop: () => {
-        if (finished) {
-          this.active.delete(handle);
-          return;
-        }
-
         finished = true;
         paused = false;
-        stopping = true;
-
-        try {
-          osc?.stop();
-        } catch {
-          // ignore
-        }
-        try {
-          osc?.disconnect();
-        } catch {
-          // ignore
-        }
-
-        try {
-          gainNode.disconnect();
-          panner.disconnect();
-        } catch {
-          // ignore
-        }
-
-        this.active.delete(handle);
+        offset = 0;
+        // Invalidate any pending 'ended' events.
+        oscToken++;
+        cleanup();
       },
       pause: () => {
         if (finished || paused) return;
@@ -161,6 +172,9 @@ class AudioEngine {
         paused = true;
         stopping = true;
         offset += Math.max(0, ctx.currentTime - startTime);
+
+        // Invalidate any pending 'ended' events for this oscillator.
+        oscToken++;
 
         try {
           osc.stop();
@@ -275,9 +289,37 @@ class AudioEngine {
       let paused = false;
       let finished = false;
       let stopping = false;
+      let sourceToken = 0;
+
+      const cleanup = () => {
+        // Idempotent cleanup.
+        stopping = true;
+
+        try {
+          source?.stop();
+        } catch {
+          // ignore
+        }
+        try {
+          source?.disconnect();
+        } catch {
+          // ignore
+        }
+        source = null;
+
+        try {
+          gainNode.disconnect();
+          panner.disconnect();
+        } catch {
+          // ignore
+        }
+
+        this.active.delete(handle);
+      };
 
       const connectAndStart = () => {
         if (finished) return;
+        const myToken = ++sourceToken;
         const s = ctx.createBufferSource();
         s.buffer = buffer;
         s.connect(gainNode);
@@ -288,9 +330,12 @@ class AudioEngine {
           'ended',
           () => {
             // If we stopped it for pause/stop, ignore this ended.
+            if (myToken !== sourceToken) return;
             if (stopping) return;
             finished = true;
-            handle.stop();
+            paused = false;
+            offset = 0;
+            cleanup();
           },
           { once: true }
         );
@@ -301,34 +346,12 @@ class AudioEngine {
 
       const handle: PlayingHandle = {
         stop: () => {
-          if (finished) {
-            this.active.delete(handle);
-            return;
-          }
-
           finished = true;
           paused = false;
-          stopping = true;
-
-          try {
-            source?.stop();
-          } catch {
-            // ignore
-          }
-          try {
-            source?.disconnect();
-          } catch {
-            // ignore
-          }
-
-          try {
-            gainNode.disconnect();
-            panner.disconnect();
-          } catch {
-            // ignore
-          }
-
-          this.active.delete(handle);
+          offset = 0;
+          // Invalidate any pending 'ended' events.
+          sourceToken++;
+          cleanup();
         },
         pause: () => {
           if (finished || paused) return;
@@ -336,6 +359,9 @@ class AudioEngine {
           paused = true;
           stopping = true;
           offset += Math.max(0, ctx.currentTime - startTime);
+
+          // Invalidate any pending 'ended' events for this source.
+          sourceToken++;
 
           try {
             source.stop();

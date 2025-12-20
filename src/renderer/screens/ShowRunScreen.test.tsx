@@ -70,4 +70,23 @@ describe('ShowRunScreen (operator feedback + GO)', () => {
     const cueRow = cue2Title.closest('.gb-cueRow');
     expect(cueRow?.className).toContain('gb-cueRow--selected');
   });
+
+  it('DIM sets master volume to 25%', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/shows/tone-test']}>
+        <ShowsProvider>
+          <Routes>
+            <Route path="/shows/:showId" element={<ShowRunScreen />} />
+          </Routes>
+        </ShowsProvider>
+      </MemoryRouter>
+    );
+
+    // Toggle DIM on.
+    const dimButtons = await screen.findAllByRole('button', { name: 'DIM' });
+    await user.click(dimButtons[0]!);
+    expect(audioEngine.setMasterVolume01).toHaveBeenCalledWith(0.25);
+  });
 });

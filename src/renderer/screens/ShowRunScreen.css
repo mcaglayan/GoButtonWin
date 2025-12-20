@@ -13,6 +13,8 @@
 }
 
 .gb-dimBtn {
+  appearance: none;
+  width: 100%;
   background: rgba(255, 255, 255, 0.10);
   border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 6px;
@@ -20,6 +22,14 @@
   text-align: center;
   font-weight: 700;
   opacity: 0.9;
+  color: inherit;
+  cursor: pointer;
+}
+
+.gb-dimBtn--active {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.22);
+  opacity: 1;
 }
 
 .gb-fader {
@@ -232,7 +242,7 @@
 
 .gb-transport {
   display: grid;
-  grid-template-columns: 1fr 520px;
+  grid-template-columns: 1fr minmax(340px, 520px);
   align-items: center;
   gap: 14px;
 }
@@ -252,7 +262,7 @@
 
 .gb-transportBtns {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 12px;
 }
 
@@ -410,6 +420,61 @@
 .gb-backLink {
   padding: 10px 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: grid;
+  gap: 8px;
+}
+
+.gb-backLink__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-height: 820px) {
+  .gb-currentCue {
+    padding: 16px 18px;
+  }
+
+  .gb-currentCue__number {
+    font-size: 52px;
+  }
+
+  .gb-currentCue__title {
+    font-size: 28px;
+    max-width: 760px;
+  }
+
+  .gb-currentCue__fades {
+    margin-top: 14px;
+  }
+
+  .gb-bottom {
+    padding: 10px;
+  }
+
+  .gb-pad {
+    width: 120px;
+    height: 136px;
+  }
+
+  .gb-clock {
+    font-size: 46px;
+  }
+
+  .gb-btn {
+    height: 56px;
+    font-size: 20px;
+  }
+
+  .gb-cueRow {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .gb-transport {
+    grid-template-columns: 1fr;
+  }
 }
 
 .gb-runTopRight {

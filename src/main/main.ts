@@ -84,9 +84,14 @@ function createWindow() {
 
   mainWindow = win;
 
+  // Ensure DevTools ends up closed on initialization.
+  // (In dev, it's easy to accidentally leave it open; this keeps startup clean.)
+  win.webContents.once('did-finish-load', () => {
+    win.webContents.closeDevTools();
+  });
+
   if (isDev) {
     win.loadURL('http://127.0.0.1:5174');
-    win.webContents.openDevTools({ mode: 'detach' });
   } else {
     win.loadFile(path.join(__dirname, '../../dist-renderer/index.html'));
   }
