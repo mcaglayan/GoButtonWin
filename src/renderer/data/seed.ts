@@ -15,6 +15,15 @@ export type Pad = {
   id: string;
   label: string;
   mediaPath?: string;
+  color?: PadColor;
+};
+
+export type PadColor = 'red' | 'orange' | 'yellow' | 'green' | 'teal' | 'blue' | 'purple';
+
+export type SoundBankItem = {
+  id: string;
+  title: string;
+  mediaPath: string;
 };
 
 export type Show = {

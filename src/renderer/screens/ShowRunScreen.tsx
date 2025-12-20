@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { useShows } from '../data/ShowsContext';
 import { audioEngine } from '../audio/audioEngine';
+import type { PadColor } from '../data/seed';
 import './ShowRunScreen.css';
 
 function newId(prefix: string) {
@@ -74,8 +75,8 @@ export default function ShowRunScreen() {
     | { kind: 'addCue'; title: string }
     | { kind: 'renameCue'; cueId: string; title: string }
     | { kind: 'deleteCue'; cueId: string }
-    | { kind: 'addPad'; label: string; mediaPath: string }
-    | { kind: 'renamePad'; padId: string; label: string; mediaPath: string }
+    | { kind: 'addPad'; label: string; mediaPath: string; color: PadColor }
+    | { kind: 'renamePad'; padId: string; label: string; mediaPath: string; color: PadColor }
     | { kind: 'deletePad'; padId: string }
     | null
   >(null);
@@ -399,13 +400,23 @@ export default function ShowRunScreen() {
 
   function openAddPad() {
     if (!isPadEditMode) return;
-    setPanel({ kind: 'addPad', label: 'New Hit', mediaPath: '' });
+
+    const padColorKeys: PadColor[] = ['red', 'orange', 'yellow', 'green', 'teal', 'blue', 'purple'];
+    const idx = (show?.pads?.length ?? 0) % padColorKeys.length;
+    const color = padColorKeys[idx] ?? 'red';
+
+    setPanel({ kind: 'addPad', label: 'New Hit', mediaPath: '', color });
   }
 
   function openRenamePad(padId: string) {
     const pad = show?.pads.find((p) => p.id === padId);
     if (!pad) return;
-    setPanel({ kind: 'renamePad', padId, label: pad.label, mediaPath: pad.mediaPath ?? '' });
+
+    const padColorKeys: PadColor[] = ['red', 'orange', 'yellow', 'green', 'teal', 'blue', 'purple'];
+    const fallbackIdx = (show?.pads?.findIndex((p) => p.id === padId) ?? 0) % padColorKeys.length;
+    const color = (pad.color as PadColor | undefined) ?? padColorKeys[fallbackIdx] ?? 'red';
+
+    setPanel({ kind: 'renamePad', padId, label: pad.label, mediaPath: pad.mediaPath ?? '', color });
   }
 
   function openDeletePad(padId: string) {
@@ -461,7 +472,10 @@ export default function ShowRunScreen() {
       if (!label) return;
       const padId = newId('pad');
       const mediaPath = panel.mediaPath.trim();
-      updateShowPads((prev) => [...prev, { id: padId, label, mediaPath: mediaPath ? mediaPath : undefined }]);
+      updateShowPads((prev) => [
+        ...prev,
+        { id: padId, label, mediaPath: mediaPath ? mediaPath : undefined, color: panel.color },
+      ]);
       setPanel(null);
       return;
     }
@@ -472,7 +486,7 @@ export default function ShowRunScreen() {
       const mediaPath = panel.mediaPath.trim();
       updateShowPads((prev) =>
         prev.map((p) =>
-          p.id === panel.padId ? { ...p, label, mediaPath: mediaPath ? mediaPath : undefined } : p
+          p.id === panel.padId ? { ...p, label, mediaPath: mediaPath ? mediaPath : undefined, color: panel.color } : p
         )
       );
       setPanel(null);
@@ -747,6 +761,9 @@ export default function ShowRunScreen() {
                 <button className="gb-iconBtn" aria-label="Add hit" title="Add hit" onClick={openAddPad} disabled={!isPadEditMode}>
                   ＋
                 </button>
+                <button className="gb-link" onClick={() => navigate(`/shows/${show?.id}/soundbank`)}>
+                  Bank
+                </button>
                 <button className="gb-link" onClick={() => setIsPadEditMode((v) => !v)}>
                   {isPadEditMode ? 'Done' : 'Edit'}
                 </button>
@@ -777,6 +794,26 @@ export default function ShowRunScreen() {
                         if (e.key === 'Escape') closePanel();
                       }}
                     />
+
+                    <div style={{ height: 10 }} />
+
+                    <div className="gb-field__label">Color</div>
+                    <div className="gb-colorRow">
+                      {(['red', 'orange', 'yellow', 'green', 'teal', 'blue', 'purple'] as PadColor[]).map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          className={`gb-colorBtn gb-pad--${c} ${padPanel.color === c ? 'gb-colorBtn--active' : ''}`}
+                          aria-label={`Color ${c}`}
+                          title={`Color ${c}`}
+                          onClick={() =>
+                            setPanel((p) =>
+                              p && (p.kind === 'addPad' || p.kind === 'renamePad') ? { ...p, color: c } : p
+                            )
+                          }
+                        />
+                      ))}
+                    </div>
 
                     <div style={{ height: 10 }} />
 
@@ -826,9 +863,14 @@ export default function ShowRunScreen() {
 
             <div className="gb-pads">
               {show?.pads.map((p, idx) => (
+                (() => {
+                  const padColorKeys: PadColor[] = ['red', 'orange', 'yellow', 'green', 'teal', 'blue', 'purple'];
+                  const key = (p.color as PadColor | undefined) ?? padColorKeys[idx % padColorKeys.length] ?? 'red';
+                  const colorClass = `gb-pad--${key}`;
+                  return (
                 <div
                   key={p.id}
-                  className="gb-pad gb-pad--red"
+                  className={`gb-pad ${colorClass}`}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
@@ -870,6 +912,8 @@ export default function ShowRunScreen() {
                   <div className="gb-pad__label">{p.label}</div>
                   <div className="gb-pad__meta">00:00,0 · -00:0…</div>
                 </div>
+                  );
+                })()
               ))}
               <button className="gb-pad gb-pad--add" aria-label="Add pad" onClick={openAddPad} disabled={!isPadEditMode}>
                 +
@@ -961,7 +1005,7 @@ export default function ShowRunScreen() {
               return (
                 <div
                   key={c.id}
-                  className={`gb-cueRow ${isSelected ? 'gb-cueRow--selected' : ''} ${isPlaying ? 'gb-cueRow--playing' : ''}`}
+                  className={`gb-cueRow ${isSelected ? 'gb-cueRow--selected' : ''} ${isPlaying ? 'gb-cueRow--playing' : ''} ${isCueEditMode ? 'gb-cueRow--editMode' : ''}`}
                   onClick={() => setSelectedCueId(c.id)}
                   role="button"
                   tabIndex={0}

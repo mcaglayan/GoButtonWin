@@ -1,7 +1,7 @@
-import { render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ShowRunScreen from './ShowRunScreen';
 import { ShowsProvider } from '../data/ShowsContext';
 
@@ -35,6 +35,8 @@ describe('ShowRunScreen (operator feedback + GO)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+
+  afterEach(() => cleanup());
 
   it('pressing GO plays selected cue and advances selection', async () => {
     const user = userEvent.setup();
@@ -88,5 +90,39 @@ describe('ShowRunScreen (operator feedback + GO)', () => {
     const dimButtons = await screen.findAllByRole('button', { name: 'DIM' });
     await user.click(dimButtons[0]!);
     expect(audioEngine.setMasterVolume01).toHaveBeenCalledWith(0.25);
+  });
+
+  it('can change hit color', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter initialEntries={['/shows/demo-sfx']}>
+        <ShowsProvider>
+          <Routes>
+            <Route path="/shows/:showId" element={<ShowRunScreen />} />
+          </Routes>
+        </ShowsProvider>
+      </MemoryRouter>
+    );
+
+    // Enter hit edit mode (use the Hits section edit button, not the top bar edit).
+    const hitsTitle = await screen.findByText('Hits');
+    const hitsHeader = hitsTitle.closest('.gb-soundboardHeader');
+    expect(hitsHeader).not.toBeNull();
+    await user.click(within(hitsHeader as HTMLElement).getByRole('button', { name: 'Edit' }));
+
+    // Click a pad to open rename panel.
+    const padLabel = await screen.findByText('Applause');
+    const padEl = padLabel.closest('.gb-pad');
+    expect(padEl).not.toBeNull();
+    await user.click(padEl as HTMLElement);
+
+    // Pick a specific color and save.
+    await user.click(await screen.findByRole('button', { name: 'Color blue' }));
+    await user.click(await screen.findByRole('button', { name: 'Save' }));
+
+    const updatedPadLabel = await screen.findByText('Applause');
+    const updatedPadEl = updatedPadLabel.closest('.gb-pad');
+    expect(updatedPadEl?.className).toContain('gb-pad--blue');
   });
 });
