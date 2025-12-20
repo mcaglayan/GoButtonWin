@@ -21,6 +21,13 @@ export type PersistedPad = {
   id: string;
   label: string;
   mediaPath?: string;
+  color?: string;
+};
+
+export type PersistedSoundBankItem = {
+  id: string;
+  title: string;
+  mediaPath: string;
 };
 
 export type PersistedShow = {
@@ -36,6 +43,7 @@ export type PersistedData = {
   updatedAt: number;
   demoSeedVersion?: number;
   shows: PersistedShow[];
+  soundBank?: PersistedSoundBankItem[];
 };
 
 function getShowsFilePath() {

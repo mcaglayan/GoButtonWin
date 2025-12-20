@@ -160,6 +160,26 @@
   margin-bottom: 12px;
 }
 
+.gb-colorRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.gb-colorBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+}
+
+.gb-colorBtn--active {
+  outline: 2px solid rgba(140, 210, 255, 0.55);
+  outline-offset: 1px;
+}
+
 .gb-pads {
   display: flex;
   gap: 12px;
@@ -213,6 +233,33 @@
 
 .gb-pad--red {
   background: rgba(231, 76, 92, 0.85);
+}
+
+.gb-pad--orange {
+  background: rgba(230, 126, 34, 0.82);
+}
+
+.gb-pad--yellow {
+  background: rgba(241, 196, 15, 0.72);
+  color: rgba(0, 0, 0, 0.78);
+}
+
+.gb-pad--green {
+  background: rgba(46, 204, 113, 0.68);
+  color: rgba(0, 0, 0, 0.78);
+}
+
+.gb-pad--teal {
+  background: rgba(26, 188, 156, 0.70);
+  color: rgba(0, 0, 0, 0.78);
+}
+
+.gb-pad--blue {
+  background: rgba(52, 152, 219, 0.72);
+}
+
+.gb-pad--purple {
+  background: rgba(155, 89, 182, 0.72);
 }
 
 .gb-pad--add {
@@ -415,6 +462,21 @@
   display: inline-flex;
   gap: 8px;
   align-items: flex-start;
+}
+
+.gb-cueRow--editMode {
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: start;
+}
+
+.gb-cueRow--editMode .gb-cueActions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .gb-backLink {

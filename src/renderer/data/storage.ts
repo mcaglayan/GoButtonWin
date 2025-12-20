@@ -1,10 +1,11 @@
-import type { Show } from './seed';
+import type { Show, SoundBankItem } from './seed';
 
 type PersistedData = {
   schemaVersion: 1;
   updatedAt: number;
   demoSeedVersion?: number;
   shows: Show[];
+  soundBank?: SoundBankItem[];
 };
 
 function assertStorage() {
@@ -27,13 +28,17 @@ export async function loadDataFromDisk(): Promise<PersistedData | null> {
   return data;
 }
 
-export async function saveShowsToDisk(shows: Show[], opts?: { demoSeedVersion?: number }): Promise<void> {
+export async function saveShowsToDisk(
+  shows: Show[],
+  opts?: { demoSeedVersion?: number; soundBank?: SoundBankItem[] }
+): Promise<void> {
   const storage = assertStorage();
   const data: PersistedData = {
     schemaVersion: 1,
     updatedAt: Date.now(),
     demoSeedVersion: opts?.demoSeedVersion,
     shows,
+    soundBank: opts?.soundBank,
   };
   await storage.saveShows(data);
 }
