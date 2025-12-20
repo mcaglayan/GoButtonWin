@@ -89,7 +89,7 @@ export default function CueEditScreen() {
     const token = ++durationTokenRef.current;
     const id = window.setTimeout(() => {
       void (async () => {
-        const seconds = await audioEngine.getFileDurationSeconds(path);
+        const seconds = await audioEngine.getFileDurationSeconds(path, { fresh: true });
         if (durationTokenRef.current !== token) return;
         if (seconds == null) return;
 
@@ -143,7 +143,7 @@ export default function CueEditScreen() {
     let nextDurationLabel = draft.durationLabel.trim();
     if (nextMediaPath) {
       // Ensure duration reflects the chosen media even if the background effect hasn't completed yet.
-      const seconds = await audioEngine.getFileDurationSeconds(nextMediaPath);
+      const seconds = await audioEngine.getFileDurationSeconds(nextMediaPath, { fresh: true });
       if (seconds != null) nextDurationLabel = formatDurationLabel(seconds);
     } else {
       nextDurationLabel = '';
