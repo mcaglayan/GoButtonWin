@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import TopBar from '../components/TopBar';
 import { useShows } from '../data/ShowsContext';
+import { audioEngine } from '../audio/audioEngine';
 import type { Cue } from '../data/seed';
 import './CueEditScreen.css';
 
@@ -13,6 +14,7 @@ type Draft = {
   toneHz: string;
   gainDb: string;
   pan: string;
+  durationLabel: string;
 };
 
 function toDraft(cue: Cue): Draft {
@@ -24,7 +26,19 @@ function toDraft(cue: Cue): Draft {
     toneHz: cue.toneHz != null ? String(cue.toneHz) : '',
     gainDb: (cue.gainDb ?? 0).toString(),
     pan: (cue.pan ?? 0).toString(),
+    durationLabel: cue.durationLabel ?? '',
   };
+}
+
+function formatDurationLabel(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '';
+  const totalTenths = Math.max(0, Math.round(seconds * 10));
+  const mins = Math.floor(totalTenths / 600);
+  const secs = Math.floor((totalTenths - mins * 600) / 10);
+  const tenths = totalTenths % 10;
+  const mm = String(mins).padStart(2, '0');
+  const ss = String(secs).padStart(2, '0');
+  return `-${mm}:${ss},${tenths}`;
 }
 
 function parseNumberOrFallback(raw: string, fallback: number) {
@@ -51,9 +65,45 @@ export default function CueEditScreen() {
 
   const [draft, setDraft] = useState<Draft | null>(null);
 
+  const lastDurationPathRef = useRef('');
+  const durationTokenRef = useRef(0);
+
   useEffect(() => {
     if (cue) setDraft(toDraft(cue));
   }, [cue?.id]);
+
+  useEffect(() => {
+    if (!draft) return;
+
+    const path = draft.mediaPath.trim();
+    if (!path) {
+      if (draft.durationLabel) setDraft({ ...draft, durationLabel: '' });
+      lastDurationPathRef.current = '';
+      return;
+    }
+
+    // Only recompute when the path actually changes (avoid decoding on every render).
+    if (path === lastDurationPathRef.current) return;
+    lastDurationPathRef.current = path;
+
+    const token = ++durationTokenRef.current;
+    const id = window.setTimeout(() => {
+      void (async () => {
+        const seconds = await audioEngine.getFileDurationSeconds(path);
+        if (durationTokenRef.current !== token) return;
+        if (seconds == null) return;
+
+        const next = formatDurationLabel(seconds);
+        setDraft((prev) => {
+          if (!prev) return prev;
+          if (prev.mediaPath.trim() !== path) return prev;
+          return { ...prev, durationLabel: next };
+        });
+      })();
+    }, 350);
+
+    return () => window.clearTimeout(id);
+  }, [draft?.mediaPath]);
 
   const canSave = !!draft?.title.trim();
 
@@ -83,18 +133,29 @@ export default function CueEditScreen() {
     await exporter({ hz, seconds: 1.0, suggestedName: `${cue.number} - ${cue.title} - ${hz}Hz` });
   }
 
-  function save(navigateToCueId?: string) {
+  async function save(navigateToCueId?: string) {
     if (!show || !cue || !draft) return;
 
     const nextTitle = draft.title.trim();
     if (!nextTitle) return;
+
+    const nextMediaPath = draft.mediaPath.trim();
+    let nextDurationLabel = draft.durationLabel.trim();
+    if (nextMediaPath) {
+      // Ensure duration reflects the chosen media even if the background effect hasn't completed yet.
+      const seconds = await audioEngine.getFileDurationSeconds(nextMediaPath);
+      if (seconds != null) nextDurationLabel = formatDurationLabel(seconds);
+    } else {
+      nextDurationLabel = '';
+    }
 
     const nextCue: Cue = {
       ...cue,
       title: nextTitle,
       subtitle: draft.subtitle.trim() || undefined,
       notes: draft.notes.trim() || undefined,
-      mediaPath: draft.mediaPath.trim() || undefined,
+      mediaPath: nextMediaPath || undefined,
+      durationLabel: nextDurationLabel || undefined,
       toneHz: parseToneHz(draft.toneHz),
       gainDb: parseNumberOrFallback(draft.gainDb, cue.gainDb ?? 0),
       pan: parseNumberOrFallback(draft.pan, cue.pan ?? 0),

@@ -234,6 +234,20 @@ class AudioEngine {
     return await ctx.decodeAudioData(arrayBuffer);
   }
 
+  async getFileDurationSeconds(filePath: string): Promise<number | null> {
+    const p = filePath.trim();
+    if (!p) return null;
+    try {
+      const bufferPromise = this.decodedByPath.get(p) ?? this.decodeFile(p);
+      this.decodedByPath.set(p, bufferPromise);
+      const buffer = await bufferPromise;
+      const dur = Number(buffer.duration || 0);
+      return Number.isFinite(dur) && dur > 0 ? dur : null;
+    } catch {
+      return null;
+    }
+  }
+
   preloadFile(filePath: string | null | undefined) {
     const p = (filePath ?? '').trim();
     if (!p) return;
